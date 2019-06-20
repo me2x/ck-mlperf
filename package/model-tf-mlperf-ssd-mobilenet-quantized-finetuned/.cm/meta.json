@@ -20,6 +20,7 @@
     "version": "finetuned"
   }, 
   "deps": {
+    }
   },
   "end_full_path": {
     "linux": "graph.pb"
