@@ -19,6 +19,11 @@
     "version": "reference"
   }, 
   "deps": {
+    "tensorflow-object-detection-api": {
+      "local": "yes", 
+      "name": "TensorFlow Object Detection API", 
+      "tags": "tensorflow,model,api"
+    }
   }, 
   "end_full_path": {
     "linux": "frozen_inference_graph.pb"
