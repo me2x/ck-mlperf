@@ -20,10 +20,6 @@
     "version": "finetuned"
   }, 
   "deps": {
-    "tensorflow-object-detection-api": {
-      "local": "yes",
-      "name": "TensorFlow Object Detection API",
-      "tags": "tensorflow,model,api"
     }
   },
   "end_full_path": {
