@@ -36,7 +36,7 @@ $ docker build -f Dockerfile -t ctuning/object-detection-tf-py.debian-9 .
 <a name="image_default_run_default"></a>
 #### Object Detection (default command)
 
-##### 50 images
+##### Non-quantized, 50 images
 ```bash
 $ ck run docker:object-detection-tf-py.debian-9
 ```
@@ -47,8 +47,7 @@ $ docker run --rm ctuning/object-detection-tf-py.debian-9 \
         --dep_add_tags.weights=ssd-mobilenet,non-quantized \
         --dep_add_tags.dataset=coco.2017,full --env.CK_BATCH_COUNT=50 \
     "
-```
-
+...
 Summary:
 -------------------------------
 Graph loaded in 0.923238s
@@ -60,19 +59,17 @@ Recall: 0.3225293342489256
 --------------------------------
 ```
 
-
 <a name="image_default_run_custom"></a>
 #### Object Detection (custom command)
 
-##### 5000 images
+##### Non-quantized, 5000 images
 ```bash
 $ docker run --rm ctuning/object-detection-tf-py.debian-9 \
     "ck run program:object-detection-tf-py \
         --dep_add_tags.weights=ssd-mobilenet,non-quantized \
         --dep_add_tags.dataset=coco.2017,full --env.CK_BATCH_COUNT=5000 \
     "
-```
-
+...
 Summary:
 -------------------------------
 Graph loaded in 0.937587s
@@ -84,8 +81,43 @@ Recall: 0.26304841188725403
 --------------------------------
 ```
 
+##### Quantized, 50 images
+```bash
+$ docker run --rm ctuning/object-detection-tf-py.debian-9 \
+    "ck run program:object-detection-tf-py \
+        --dep_add_tags.weights=ssd-mobilenet,quantized \
+        --dep_add_tags.dataset=coco.2017,full --env.CK_BATCH_COUNT=50 \
+    "
+...
+Summary:
+-------------------------------
+Graph loaded in 1.092699s
+All images loaded in 12.919672s
+All images detected in 2.137745s
+Average detection time: 0.043627s
+mAP: 0.32625778039773207
+Recall: 0.33433530428110675
+--------------------------------
+```
 
-
+##### Quantized, 5000 images
+```bash
+$ docker run --rm ctuning/object-detection-tf-py.debian-9 \
+    "ck run program:object-detection-tf-py \
+        --dep_add_tags.weights=ssd-mobilenet,quantized \
+        --dep_add_tags.dataset=coco.2017,full --env.CK_BATCH_COUNT=5000 \
+    "
+...
+Summary:
+-------------------------------
+Graph loaded in 1.589762s
+All images loaded in 1273.597364s
+All images detected in 213.662603s
+Average detection time: 0.042741s
+mAP: 0.23594222525632427
+Recall: 0.26864982712779556
+--------------------------------
+```
 
 <a name="image_default_run_bash"></a>
 #### Bash

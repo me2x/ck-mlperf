@@ -15,13 +15,15 @@ OUTPUT_LAYER_NAME       = os.environ['CK_ENV_ONNX_MODEL_OUTPUT_LAYER_NAME']
 MODEL_DATA_LAYOUT       = os.environ['ML_MODEL_DATA_LAYOUT']
 MODEL_IMAGE_HEIGHT      = int(os.environ['CK_ENV_ONNX_MODEL_IMAGE_HEIGHT'])
 MODEL_IMAGE_WIDTH       = int(os.environ['CK_ENV_ONNX_MODEL_IMAGE_WIDTH'])
+LABELS_PATH             = os.environ['CK_CAFFE_IMAGENET_SYNSET_WORDS_TXT']
 
 ## Image normalization:
 #
 MODEL_NORMALIZE_DATA    = os.getenv("CK_ENV_ONNX_MODEL_NORMALIZE_DATA") in ('YES', 'yes', 'ON', 'on', '1')
-SUBTRACT_MEAN           = os.getenv("CK_SUBTRACT_MEAN") == "YES"
-USE_MODEL_MEAN          = os.getenv("CK_USE_MODEL_MEAN") == "YES"
-MODEL_MEAN_VALUE        = np.array([0, 0, 0], dtype=np.float32) # to be populated
+SUBTRACT_MEAN           = os.getenv("CK_ENV_ONNX_MODEL_SUBTRACT_MEAN") in ('YES', 'yes', 'ON', 'on', '1')
+GIVEN_CHANNEL_MEANS     = os.getenv("ML_MODEL_GIVEN_CHANNEL_MEANS", '')
+if GIVEN_CHANNEL_MEANS:
+    GIVEN_CHANNEL_MEANS = np.array(GIVEN_CHANNEL_MEANS.split(' '), dtype=np.float32)
 
 ## Input image properties:
 #
@@ -29,23 +31,16 @@ IMAGE_DIR               = os.getenv('CK_ENV_DATASET_IMAGENET_PREPROCESSED_DIR')
 IMAGE_LIST_FILE         = os.path.join(IMAGE_DIR, os.getenv('CK_ENV_DATASET_IMAGENET_PREPROCESSED_SUBSET_FOF'))
 IMAGE_DATA_TYPE         = np.dtype( os.getenv('CK_ENV_DATASET_IMAGENET_PREPROCESSED_DATA_TYPE', 'uint8') )
 
-## Old perprocessor:
+## Writing the results out:
 #
-# IMAGE_DIR               = os.getenv('RUN_OPT_IMAGE_DIR')
-# IMAGE_LIST_FILE         = os.getenv('RUN_OPT_IMAGE_LIST')
-
-LABELS_PATH             = os.environ['CK_CAFFE_IMAGENET_SYNSET_WORDS_TXT']
+RESULTS_DIR             = os.getenv('CK_RESULTS_DIR')
+FULL_REPORT             = os.getenv('CK_SILENT_MODE', '0') in ('NO', 'no', 'OFF', 'off', '0')
 
 ## Processing in batches:
 #
 BATCH_SIZE              = int(os.getenv('CK_BATCH_SIZE', 1))
 BATCH_COUNT             = int(os.getenv('CK_BATCH_COUNT', 1))
 CPU_THREADS             = int(os.getenv('CK_HOST_CPU_NUMBER_OF_PROCESSORS',0))
-
-## Writing the results out:
-#
-RESULTS_DIR             = os.getenv('CK_RESULTS_DIR')
-FULL_REPORT             = os.getenv('CK_SILENT_MODE', '0') in ('NO', 'no', 'OFF', 'off', '0')
 
 
 def load_preprocessed_batch(image_list, image_index):
@@ -54,18 +49,20 @@ def load_preprocessed_batch(image_list, image_index):
         img_file = os.path.join(IMAGE_DIR, image_list[image_index])
         img = np.fromfile(img_file, IMAGE_DATA_TYPE)
         img = img.reshape((MODEL_IMAGE_HEIGHT, MODEL_IMAGE_WIDTH, 3))
-        img = img.astype(np.float32)
 
-        # Normalize
-        if MODEL_NORMALIZE_DATA:
-            img = img/127.5 - 1.0
+        if IMAGE_DATA_TYPE != 'float32':
+            img = img.astype(np.float32)
 
-        # Subtract mean value
-        if SUBTRACT_MEAN:
-            if USE_MODEL_MEAN:
-                img = img - MODEL_MEAN_VALUE
-            else:
-                img = img - np.mean(img)
+            # Normalize
+            if MODEL_NORMALIZE_DATA:
+                img = img/127.5 - 1.0
+
+            # Subtract mean value
+            if SUBTRACT_MEAN:
+                if len(GIVEN_CHANNEL_MEANS):
+                    img -= GIVEN_CHANNEL_MEANS
+                else:
+                    img -= np.mean(img)
 
         # Add img to batch
         batch_data.append( [img] )
@@ -105,7 +102,7 @@ def main():
     print('Results dir: ' + RESULTS_DIR);
     print('Normalize: {}'.format(MODEL_NORMALIZE_DATA))
     print('Subtract mean: {}'.format(SUBTRACT_MEAN))
-    print('Use model mean: {}'.format(USE_MODEL_MEAN))
+    print('Per-channel means to subtract: {}'.format(GIVEN_CHANNEL_MEANS))
 
     setup_time_begin = time.time()
 
@@ -149,7 +146,6 @@ def main():
     print("Input layer name: " + INPUT_LAYER_NAME)
     print("Expected input shape: {}".format(model_input_shape))
     print("Output layer name: " + OUTPUT_LAYER_NAME)
-    print("Data normalization: {}".format(MODEL_NORMALIZE_DATA))
     print("Background/unlabelled classes to skip: {}".format(bg_class_offset))
     print("")
 
