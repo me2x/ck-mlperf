@@ -48,7 +48,7 @@
     "dividiti.vision_with_ck": {
       "extra_env": {
         "PACKAGE_URL": "https://github.com/dividiti/inference",
-	"PACKAGE_GIT_CLONE_FLAGS": "-b classification_and_detection_with_ck"
+	"PACKAGE_GIT_CLONE_FLAGS": "-b vision_with_ck"
       },
       "extra_customize": {
         "package_extra_name": " from dividiti's fork, library for the ck-mlperf inference program"
